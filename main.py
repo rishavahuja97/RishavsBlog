@@ -85,12 +85,10 @@ db.create_all()
 def admin_only(func):
     @wraps(func)
     def wrapper_func(*args , **kwargs):
-        try:
-            if current_user.id!=1 :
+            if current_user.id==1:
+                return func(*args, **kwargs)
+            else:
                 abort(403)
-        except:
-            abort(403)
-        return func(*args, **kwargs)
 
     return wrapper_func
 
@@ -227,7 +225,7 @@ def add_new_post():
 
 
 
-@app.route("/edit-post/<int:post_id>")
+@app.route("/edit-post/<int:post_id>",methods=['GET','POST'])
 @admin_only
 def edit_post(post_id):
     post = BlogPost.query.get(post_id)
@@ -239,10 +237,11 @@ def edit_post(post_id):
         body=post.body
     )
     if edit_form.validate_on_submit():
+        print('hello')
         post.title = edit_form.title.data
         post.subtitle = edit_form.subtitle.data
         post.img_url = edit_form.img_url.data
-        post.author = edit_form.author.data
+        post.author = current_user.name
         post.body = edit_form.body.data
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
